@@ -35,7 +35,7 @@ main = do
 --    intersperse ',' "abcde" == "a,b,c,d,e"
 intersperse :: a -> [a] -> [a]
 intersperse _ [] = []
-intersperse e (h:tl) = h:(foldr (\x y -> [e,x] ++ y ) [] tl)   
+intersperse e (h:tl) = foldl (\x y -> [e,x] ++ y ) [h] tl   
 t2a :: Test
 t2a = "2a" ~: "a,b,c,d,e" ~=? intersperse ',' "abcde"
 
