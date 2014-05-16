@@ -273,4 +273,39 @@ drawTree :: IO ()
 drawTree = displayInWindow "MyWindow" (700,700) (10,10) white fractalTree
 
 test1 :: Test
-test1 = TestList [
+test1 = TestList [t1a,t1b,t1c]
+
+----------------------------------------------------------------------
+
+-- 3
+
+
+
+formatPlay :: SimpleXML -> SimpleXML
+formatPlay _ = PCDATA "WRITE ME"
+
+
+
+firstDiff :: Eq a => [a] -> [a] -> Maybe ([a],[a])
+firstDiff [] [] = Nothing
+firstDiff (c:cs) (d:ds) 
+    | c==d = firstDiff cs ds 
+    | otherwise = Just (c:cs, d:ds)
+firstDiff cs ds = Just (cs,ds)
+
+-- | Test the two files character by character, to determine whether
+-- they match.
+testResults :: String -> String -> IO ()
+testResults file1 file2 = do 
+  f1 <- readFile file1
+  f2 <- readFile file2
+  case firstDiff f1 f2 of
+    Nothing -> return ()
+    Just (cs,ds) -> assertFailure msg where
+      msg  = "Results differ: '" ++ take 20 cs ++ 
+            "' vs '" ++ take 20 ds
+
+test3 :: Test
+test3 = TestCase $ do 
+  writeFile "dream.html" (xml2string (formatPlay play))
+  testResults "dream.html" "sample.html"
