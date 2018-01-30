@@ -16,19 +16,27 @@ void* thread1(void *threadid)
     pthread_mutex_lock(&count_mutex);
     mainState = luaL_newstate();
     luaL_openlibs(mainState);
-    int status = luaL_loadfile(L, "script.lua");
+    runThread = lua_newthread(mainState);
+    int status = luaL_loadfile(runThread, "script.lua");
     if (status)
     {
-        fprintf(stderr, "load lua file failed %s", lua_tostring(L, -1));
+        fprintf(stderr, "load lua file failed %s", lua_tostring(runThread, -1));
     }
     else
     {
-        runThread = lua_newthread(mainState);
+        //lua_getglobal(runThread, "main");
         int result = lua_resume(runThread, mainState, 0);
-        fprintf(stderr, "run in thread1 result:%d", result);
+        fprintf(stderr, "run in thread1 result:%d\n", result);
         if (result == LUA_YIELD)
         {
             pthread_cond_signal(&count_threshold_cv);
+        }
+        else
+        {
+            if (result != LUA_OK)
+            {
+                 fprintf(stderr, "run error in thread1:%s\n", lua_tostring(runThread, -1));   
+            }
         }
     }
     pthread_mutex_unlock(&count_mutex);
@@ -40,7 +48,7 @@ void* thread2(void *threadid)
     pthread_mutex_lock(&count_mutex);
     pthread_cond_wait(&count_threshold_cv, &count_mutex);
     int result = lua_resume(runThread, mainState, 0);
-    fprintf(stderr, "run in thread1 result:%d", result);
+    fprintf(stderr, "run in thread2 result:%d\n", result);
     pthread_mutex_unlock(&count_mutex);
 }
 
